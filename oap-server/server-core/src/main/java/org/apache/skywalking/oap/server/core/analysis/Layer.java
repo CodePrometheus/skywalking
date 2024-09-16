@@ -234,7 +234,12 @@ public enum Layer {
      * Cilium is open source software for providing and transparently securing network connectivity and load balancing
      * between application workloads such as application containers or processes.
      */
-    CILIUM_SERVICE(38, true);
+    CILIUM_SERVICE(38, true),
+
+    /**
+     * Kong is Cloud-Native API Gateway and AI Gateway.
+     */
+    KONG(39, true);
 
     private final int value;
     /**

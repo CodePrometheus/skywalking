@@ -76,6 +76,7 @@ public class UITemplateInitializer {
         Layer.CLICKHOUSE.name(),
         Layer.ACTIVEMQ.name(),
         Layer.CILIUM_SERVICE.name(),
+        Layer.KONG.name(),
         "custom"
     };
     private final UITemplateManagementService uiTemplateManagementService;
