@@ -47,6 +47,7 @@ public class ModuleManager implements ModuleDefineHolder {
         CycleDependencyException, ModuleConfigException, ModuleStartException {
 
         String[] moduleNames = applicationConfiguration.moduleList();
+        System.out.println("my|ModuleManager|init moduleNames = " + Arrays.toString(moduleNames));
         ServiceLoader<ModuleDefine> moduleServiceLoader = ServiceLoader.load(ModuleDefine.class);
         ServiceLoader<ModuleProvider> moduleProviderLoader = ServiceLoader.load(ModuleProvider.class);
 

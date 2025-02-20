@@ -41,6 +41,7 @@ public class ScriptParser {
 
     public static ScriptParser createFromFile(Reader scriptReader, String sourcePackage) throws IOException {
         ScriptParser parser = new ScriptParser();
+        // 词法解析的结果
         parser.lexer = new OALLexer(CharStreams.fromReader(scriptReader));
         parser.sourcePackage = sourcePackage;
         return parser;
@@ -63,6 +64,7 @@ public class ScriptParser {
         ParseTree tree = parser.root();
         ParseTreeWalker walker = new ParseTreeWalker();
 
+        // 注册监听器，执行OALListener每个 enter 和 exit 方法
         walker.walk(new OALListener(scripts, sourcePackage), tree);
 
         return scripts;

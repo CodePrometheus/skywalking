@@ -20,6 +20,7 @@ package org.apache.skywalking.oal.rt.parser;
 
 import org.apache.skywalking.oal.rt.util.ClassMethodUtil;
 import org.apache.skywalking.oal.rt.util.TypeCastUtil;
+import org.apache.skywalking.oap.server.core.analysis.metrics.LongAvgMetrics;
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics;
 import org.apache.skywalking.oap.server.core.analysis.metrics.annotation.Arg;
 import org.apache.skywalking.oap.server.core.analysis.metrics.annotation.ConstOne;
@@ -36,13 +37,13 @@ import static java.util.Objects.isNull;
 
 public class DeepAnalysis {
     public AnalysisResult analysis(AnalysisResult result) {
-        // 1. Set sub package name by source.metrics
-        Class<? extends Metrics> metricsClass = MetricsHolder.find(result.getAggregationFuncStmt().getAggregationFunctionName());
-        String metricsClassSimpleName = metricsClass.getSimpleName();
+        // 1. Set sub package name by source.metrics 在 MetricsHolder 中找到对应的 Metrics 类
+        Class<? extends Metrics> metricsClass = MetricsHolder.find(result.getAggregationFuncStmt().getAggregationFunctionName()); // org.apache.skywalking.oap.server.core.analysis.metrics.LongAvgMetrics
+        String metricsClassSimpleName = metricsClass.getSimpleName(); // LongAvgMetrics
 
         result.setMetricsClassName(metricsClassSimpleName);
 
-        // Optional for filter
+        // Optional for filter filter表达式处理
         List<ConditionExpression> expressions = result.getFilters().getFilterExpressionsParserResult();
         if (expressions != null && expressions.size() > 0) {
             for (ConditionExpression expression : expressions) {
@@ -64,16 +65,20 @@ public class DeepAnalysis {
         // 3. Find Entrance method of this metrics
         Class<?> c = metricsClass;
         Method entranceMethod = null;
+        // 循坏标签
         SearchEntrance:
         while (!c.equals(Object.class)) {
             for (Method method : c.getMethods()) {
+                /**
+                 * 比如 {@link LongAvgMetrics#combine(long, long)}
+                 */
                 Entrance annotation = method.getAnnotation(Entrance.class);
                 if (annotation != null) {
                     entranceMethod = method;
                     break SearchEntrance;
                 }
             }
-            c = c.getSuperclass();
+            c = c.getSuperclass(); // 本类中没有找到带@Entrance注解的方法，则到父类中查找
         }
         if (entranceMethod == null) {
             throw new IllegalArgumentException("Can't find Entrance method in class: " + metricsClass.getName());
@@ -82,7 +87,7 @@ public class DeepAnalysis {
         result.setEntryMethod(entryMethod);
         entryMethod.setMethodName(entranceMethod.getName());
 
-        // 4. Use parameter's annotation of entrance method to generate aggregation entrance.
+        // 4. Use parameter's annotation of entrance method to generate aggregation entrance. 遍历带有@Entrance注解的方法的所有参数
         for (Parameter parameter : entranceMethod.getParameters()) {
             Class<?> parameterType = parameter.getType();
             Annotation[] parameterAnnotations = parameter.getAnnotations();
@@ -92,11 +97,11 @@ public class DeepAnalysis {
             }
             Annotation annotation = parameterAnnotations[0];
             if (annotation instanceof SourceFrom) {
-                entryMethod.addArg(
-                    parameterType,
+                entryMethod.addArg( // 得到的比如 (long)(source.getLatency())
+                    parameterType, // long
                     TypeCastUtil.withCast(
-                        result.getFrom().getSourceCastType(),
-                        "source." + ClassMethodUtil.toGetMethod(result.getFrom().getSourceAttribute())
+                        result.getFrom().getSourceCastType(), // 类型转换 比如from((str->long)Service.tag["transmission.latency"])中的(str->long)
+                        "source." + ClassMethodUtil.toGetMethod(result.getFrom().getSourceAttribute()) // 比如from(Service.latency)中的latency
                     )
                 );
             } else if (annotation instanceof ConstOne) {
@@ -141,6 +146,13 @@ public class DeepAnalysis {
         while (!c.equals(Object.class)) {
             for (Field field : c.getDeclaredFields()) {
                 Column column = field.getAnnotation(Column.class);
+                /**
+                 * 比如
+                 * summation
+                 * count
+                 * value
+                 * timeBucket
+                 */
                 if (column != null) {
                     result.addPersistentField(
                         field.getName(),
@@ -152,6 +164,12 @@ public class DeepAnalysis {
         }
 
         // 6. Based on Source, generate default columns
+        /**
+         * getSourceName 获取比如from(Service.latency).longAvg().decorator("ServiceDecorator")中的Service
+         * 找到带有@ScopeDeclaration的且name = "Service" 
+         * @see {@link org.apache.skywalking.oap.server.core.source.Service}
+         * 将 @ScopeDefaultColumn.VirtualColumnDefinition 注解的所有属性封装到SourceColumn
+         */
         List<SourceColumn> columns = SourceColumnsFactory.getColumns(result.getFrom().getSourceName());
         result.setFieldsFromSource(columns);
 

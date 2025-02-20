@@ -83,7 +83,7 @@ public class OALKernel implements OALEngine {
     @Override
     public void start(ClassLoader currentClassLoader) throws ModuleStartException, OALCompileException {
         if (!IS_RT_TEMP_FOLDER_INIT_COMPLETED) {
-            oalClassGenerator.prepareRTTempFolder();
+            oalClassGenerator.prepareRTTempFolder(); // oap-server/server-core/target/oal-rt
             IS_RT_TEMP_FOLDER_INIT_COMPLETED = true;
         }
 
@@ -91,6 +91,7 @@ public class OALKernel implements OALEngine {
         oalClassGenerator.setCurrentClassLoader(currentClassLoader);
 
         try {
+            System.out.println("my|OALKernel|start oalDefine.getConfigFile() = " + oalDefine.getConfigFile());
             read = ResourceUtils.read(oalDefine.getConfigFile());
         } catch (FileNotFoundException e) {
             throw new ModuleStartException("Can't locate " + oalDefine.getConfigFile(), e);
@@ -116,7 +117,7 @@ public class OALKernel implements OALEngine {
                 throw new ModuleStartException(e.getMessage(), e);
             }
         }
-        for (Class dispatcherClass : dispatcherClasses) {
+        for (Class dispatcherClass : dispatcherClasses) { // 遍历使用.oal文件生成的所有xxxDispatcher类 eg. org.apache.skywalking.oap.server.core.source.oal.rt.dispatcher.MQEndpointAccessDispatcher
             try {
                 dispatcherDetectorListener.addIfAsSourceDispatcher(dispatcherClass);
             } catch (Exception e) {

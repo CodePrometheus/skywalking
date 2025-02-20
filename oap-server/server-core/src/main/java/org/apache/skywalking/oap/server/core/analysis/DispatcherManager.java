@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.skywalking.oap.server.core.UnexpectedException;
+import org.apache.skywalking.oap.server.core.source.DefaultScopeDefine;
 import org.apache.skywalking.oap.server.core.source.ISource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,7 @@ public class DispatcherManager implements DispatcherDetectorListener {
     public void addIfAsSourceDispatcher(Class aClass) throws IllegalAccessException, InstantiationException {
         if (!aClass.isInterface() && !Modifier.isAbstract(
             aClass.getModifiers()) && SourceDispatcher.class.isAssignableFrom(aClass)) {
-            Type[] genericInterfaces = aClass.getGenericInterfaces();
+            Type[] genericInterfaces = aClass.getGenericInterfaces(); // eg. org.apache.skywalking.oap.server.core.analysis.SourceDispatcher<org.apache.skywalking.oap.server.core.source.DatabaseSlowStatement>
             for (Type genericInterface : genericInterfaces) {
                 ParameterizedType anInterface = (ParameterizedType) genericInterface;
                 if (anInterface.getRawType().getTypeName().equals(SourceDispatcher.class.getName())) {
@@ -85,6 +86,7 @@ public class DispatcherManager implements DispatcherDetectorListener {
                     ISource dispatcherSource = (ISource) source;
                     SourceDispatcher dispatcher = (SourceDispatcher) aClass.newInstance();
 
+                    /**也就是{@link DefaultScopeDefine}这里的常量*/
                     int scopeId = dispatcherSource.scope();
 
                     List<SourceDispatcher<ISource>> dispatchers = this.dispatcherMap.get(scopeId);

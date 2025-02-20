@@ -410,7 +410,7 @@ public class CoreModuleProvider extends ModuleProvider {
             throw new ModuleStartException(e.getMessage(), e);
         }
 
-        // Disable OAL script has higher priority
+        // Disable OAL script has higher priority 有最高的优先级
         oalEngineLoaderService.load(DisableOALDefine.INSTANCE);
 
         Address gRPCServerInstanceAddress = new Address(moduleConfig.getGRPCHost(), moduleConfig.getGRPCPort(), true);

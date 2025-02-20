@@ -32,8 +32,11 @@ import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics;
 import org.apache.skywalking.oap.server.core.source.DefaultScopeDefine;
 import org.apache.skywalking.oap.server.core.source.ISource;
 
+/**
+ * {@link OALParserBaseListener}
+ */
 public class OALListener extends OALParserBaseListener {
-    private List<AnalysisResult> results;
+    private List<AnalysisResult> results; // 分析结果
     private AnalysisResult current;
     private DisableCollection collection;
 
@@ -56,7 +59,7 @@ public class OALListener extends OALParserBaseListener {
     public void exitAggregationStatement(@NotNull OALParser.AggregationStatementContext ctx) {
         DeepAnalysis deepAnalysis = new DeepAnalysis();
         results.add(deepAnalysis.analysis(current));
-        current = null;
+        current = null; // 准备分析下一个
     }
 
     @Override
@@ -81,9 +84,9 @@ public class OALListener extends OALParserBaseListener {
 
     @Override
     public void exitVariable(OALParser.VariableContext ctx) {
-        current.setVarName(ctx.getText());
-        current.setMetricsName(metricsNameFormat(ctx.getText()));
-        current.setTableName(ctx.getText().toLowerCase());
+        current.setVarName(ctx.getText()); // service_resp_time
+        current.setMetricsName(metricsNameFormat(ctx.getText())); // ServiceRespTime
+        current.setTableName(ctx.getText().toLowerCase()); // service_resp_time
     }
 
     @Override

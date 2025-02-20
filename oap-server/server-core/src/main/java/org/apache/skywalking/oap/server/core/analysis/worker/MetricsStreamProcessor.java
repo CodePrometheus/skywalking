@@ -129,10 +129,11 @@ public class MetricsStreamProcessor implements StreamProcessor<Metrics> {
         final StorageBuilderFactory storageBuilderFactory = moduleDefineHolder.find(StorageModule.NAME)
                                                                               .provider()
                                                                               .getService(StorageBuilderFactory.class);
+        // @Stream 注解builder的值 eg. ServiceRespTimeMetricsBuilder
         final Class<? extends StorageBuilder> builder = storageBuilderFactory.builderOf(
             metricsClass, stream.getBuilder());
 
-        StorageDAO storageDAO = moduleDefineHolder.find(StorageModule.NAME).provider().getService(StorageDAO.class);
+        StorageDAO storageDAO = moduleDefineHolder.find(StorageModule.NAME).provider().getService(StorageDAO.class); // eg. BanyanDBStorageDAO
         IMetricsDAO metricsDAO;
         try {
             metricsDAO = storageDAO.newMetricsDao(builder.getDeclaredConstructor().newInstance());
@@ -146,6 +147,7 @@ public class MetricsStreamProcessor implements StreamProcessor<Metrics> {
                                                                     .provider()
                                                                     .getService(DownSamplingConfigService.class);
 
+        // 初始化L2聚合中的hour,day的worker
         MetricsPersistentWorker hourPersistentWorker = null;
         MetricsPersistentWorker dayPersistentWorker = null;
 
@@ -158,7 +160,7 @@ public class MetricsStreamProcessor implements StreamProcessor<Metrics> {
         boolean supportDownSampling = true;
         boolean supportUpdate = true;
         boolean timeRelativeID = true;
-        if (metricsExtension != null) {
+        if (metricsExtension != null) { // 重新开始赋值
             supportDownSampling = metricsExtension.supportDownSampling();
             supportUpdate = metricsExtension.supportUpdate();
             timeRelativeID = metricsExtension.timeRelativeID();

@@ -50,7 +50,8 @@ public class ApplicationStartUp {
             ApplicationStartUp.class.getResourceAsStream("/application.yml"),
             Configuration.class);
 
-        final int port = configuration.port();
+        // final int port = configuration.port();
+        final int port = 28080;
         final String[] oapServices = configuration.oapServices();
 
         final HttpService indexPage =

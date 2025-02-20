@@ -62,6 +62,8 @@ public class StorageModels implements IModelManager, ModelCreator, ModelManipula
         SQLDatabaseModelExtension sqlDBModelExtension = new SQLDatabaseModelExtension();
         BanyanDBModelExtension banyanDBModelExtension = new BanyanDBModelExtension();
         ElasticSearchModelExtension elasticSearchModelExtension = new ElasticSearchModelExtension();
+        // 到Metrics中收集创建表所需要的信息
+        // modelColumn 包含所有带有@Column注解的字段信息
         retrieval(aClass, storage.getModelName(), modelColumns, scopeId, checker, sqlDBModelExtension, banyanDBModelExtension);
         // Add extra column for additional entities
         if (aClass.isAnnotationPresent(SQLDatabase.ExtraColumn4AdditionalEntity.class)
@@ -108,7 +110,7 @@ public class StorageModels implements IModelManager, ModelCreator, ModelManipula
 
         checker.check(storage.getModelName());
 
-        Model model = new Model(
+        Model model = new Model( // 表信息
             storage.getModelName(),
             modelColumns,
             scopeId,
@@ -123,6 +125,7 @@ public class StorageModels implements IModelManager, ModelCreator, ModelManipula
 
         this.followColumnNameRules(model);
         models.add(model);
+        System.out.println("my|StorageModels|models = " + models);
 
         for (final CreatingListener listener : listeners) {
             listener.whenCreating(model);
@@ -171,14 +174,14 @@ public class StorageModels implements IModelManager, ModelCreator, ModelManipula
                     }
                 }
 
-                Column column = field.getAnnotation(Column.class);
+                Column column = field.getAnnotation(Column.class); // eg. @Column(name = "entity_id", length = 512)
                 // Use the column#length as the default column length, as read the system env as the override mechanism.
                 // Log the error but don't block the startup sequence.
                 int columnLength = column.length();
 
                 // SQL Database extension
                 SQLDatabaseExtension sqlDatabaseExtension = new SQLDatabaseExtension();
-                List<SQLDatabase.CompositeIndex> indexDefinitions = new ArrayList<>();
+                List<SQLDatabase.CompositeIndex> indexDefinitions = new ArrayList<>(); // 字段索引信息
                 if (field.isAnnotationPresent(SQLDatabase.CompositeIndex.class)) {
                     indexDefinitions.add(field.getAnnotation(SQLDatabase.CompositeIndex.class));
                 }
@@ -194,6 +197,9 @@ public class StorageModels implements IModelManager, ModelCreator, ModelManipula
                         indexDefinition.withColumns()
                     ));
                 });
+                if (!indexDefinitions.isEmpty()) {
+                    System.out.println("my|StorageModels|indexDefinitions = " + indexDefinitions);
+                }
 
                 // ElasticSearch extension
                 final var elasticSearchAnalyzer = field.getAnnotation(ElasticSearch.MatchQuery.class);
@@ -242,7 +248,7 @@ public class StorageModels implements IModelManager, ModelCreator, ModelManipula
                     banyanDBModelExtension.setTopN(topN);
                 }
 
-                final ModelColumn modelColumn = new ModelColumn(
+                final ModelColumn modelColumn = new ModelColumn( // 每个字段的对象
                     new ColumnName(column),
                     field.getType(),
                     field.getGenericType(),

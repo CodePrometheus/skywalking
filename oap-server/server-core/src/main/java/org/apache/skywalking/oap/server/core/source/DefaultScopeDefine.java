@@ -200,7 +200,7 @@ public class DefaultScopeDefine {
     /**
      * Add a new scope based on the scan result
      *
-     * @param declaration   includes the definition.
+     * @param declaration   includes the definition. {@link DefaultScopeDefine}
      * @param originalClass represents the class having the {@link ScopeDeclaration} annotation
      */
     private static void addNewScope(ScopeDeclaration declaration, Class originalClass) {

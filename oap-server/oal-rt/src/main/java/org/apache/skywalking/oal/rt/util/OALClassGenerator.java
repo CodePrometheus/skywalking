@@ -50,6 +50,7 @@ import org.apache.skywalking.oap.server.core.WorkPath;
 import org.apache.skywalking.oap.server.core.analysis.DisableRegister;
 import org.apache.skywalking.oap.server.core.analysis.SourceDispatcher;
 import org.apache.skywalking.oap.server.core.analysis.Stream;
+import org.apache.skywalking.oap.server.core.oal.rt.CoreOALDefine;
 import org.apache.skywalking.oap.server.core.oal.rt.OALCompileException;
 import org.apache.skywalking.oap.server.core.oal.rt.OALDefine;
 import org.apache.skywalking.oap.server.core.source.oal.rt.dispatcher.DispatcherClassPackageHolder;
@@ -112,26 +113,34 @@ public class OALClassGenerator {
     private static String GENERATED_FILE_PATH;
 
     public OALClassGenerator(OALDefine define) {
-        openEngineDebug = StringUtil.isNotEmpty(System.getenv("SW_OAL_ENGINE_DEBUG"));
+        // openEngineDebug = StringUtil.isNotEmpty(System.getenv("SW_OAL_ENGINE_DEBUG"));
+        openEngineDebug = true; // set this for debug
         allDispatcherContext = new AllDispatcherContext();
         classPool = ClassPool.getDefault();
         oalDefine = define;
 
+        // 后续供 freemaker 使用 解析.ftl文件
         configuration = new Configuration(new Version("2.3.28"));
         configuration.setEncoding(Locale.ENGLISH, CLASS_FILE_CHARSET);
         configuration.setClassLoaderForTemplateLoading(OALRuntime.class.getClassLoader(), "/code-templates");
     }
 
+    /**
+     * 使用解析完成的{@link AnalysisResult} 生成后续需要使用的 Metrics, MetricsBuilder, Dispatcher
+     */
     public void generateClassAtRuntime(OALScripts oalScripts, List<Class> metricsClasses, List<Class> dispatcherClasses) throws OALCompileException {
-        List<AnalysisResult> metricsStmts = oalScripts.getMetricsStmts();
+        List<AnalysisResult> metricsStmts = oalScripts.getMetricsStmts(); // service_resp_time service_sla...
         metricsStmts.forEach(this::buildDispatcherContext);
 
         for (AnalysisResult metricsStmt : metricsStmts) {
+            // generateMetricsClass 生成 xxxMetrics 类 比如 ServiceRespTimeMetrics
             metricsClasses.add(generateMetricsClass(metricsStmt));
+            // 生成 xxxMetricsBuilder 类 比如 ServiceRespTimeMetricsBuilder
             generateMetricsBuilderClass(metricsStmt);
         }
 
         for (Map.Entry<String, DispatcherContext> entry : allDispatcherContext.getAllContext().entrySet()) {
+            /** 生成 xxxDispatcher 类 {@link org.apache.skywalking.oap.server.core.source.oal.rt.dispatcher.MQEndpointAccessDispatcher} */
             dispatcherClasses.add(generateDispatcherClass(entry.getKey(), entry.getValue()));
         }
 
@@ -144,16 +153,18 @@ public class OALClassGenerator {
      * Generate metrics class, and inject it to classloader
      */
     private Class generateMetricsClass(AnalysisResult metricsStmt) throws OALCompileException {
-        String className = metricsClassName(metricsStmt, false);
+        String className = metricsClassName(metricsStmt, false); // eg. ServiceRespTimeMetrics
         CtClass parentMetricsClass = null;
         try {
-            parentMetricsClass = classPool.get(METRICS_FUNCTION_PACKAGE + metricsStmt.getMetricsClassName());
+            parentMetricsClass = classPool.get(METRICS_FUNCTION_PACKAGE + metricsStmt.getMetricsClassName()); // org.apache.skywalking.oap.server.core.analysis.metrics.LongAvgMetrics
         } catch (NotFoundException e) {
             log.error("Can't find parent class for " + className + ".", e);
             throw new OALCompileException(e.getMessage(), e);
         }
+        // org.apache.skywalking.oap.server.core.source.oal.rt.metrics. + metricsStmt.getMetricsClassName() + "Metrics"
         CtClass metricsClass = classPool.makeClass(metricsClassName(metricsStmt, true), parentMetricsClass);
         try {
+            /**实现 {@link org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata}*/
             metricsClass.addInterface(classPool.get(WITH_METADATA_INTERFACE));
         } catch (NotFoundException e) {
             log.error("Can't find WithMetadata interface for " + className + ".", e);
@@ -178,6 +189,13 @@ public class OALClassGenerator {
          * Add fields with annotations.
          *
          * private ${sourceField.typeName} ${sourceField.fieldName};
+         * 0 = {SourceColumn@14330} "SourceColumn{fieldName='entityId', columnName='entity_id', type=class java.lang.String, isID=true}"
+         * 1 = {SourceColumn@14356} "SourceColumn{fieldName='attr0', columnName='attr0', type=class java.lang.String, isID=false}"
+         * 2 = {SourceColumn@14357} "SourceColumn{fieldName='attr1', columnName='attr1', type=class java.lang.String, isID=false}"
+         * 3 = {SourceColumn@14358} "SourceColumn{fieldName='attr2', columnName='attr2', type=class java.lang.String, isID=false}"
+         * 4 = {SourceColumn@14359} "SourceColumn{fieldName='attr3', columnName='attr3', type=class java.lang.String, isID=false}"
+         * 5 = {SourceColumn@14360} "SourceColumn{fieldName='attr4', columnName='attr4', type=class java.lang.String, isID=false}"
+         * 6 = {SourceColumn@14361} "SourceColumn{fieldName='attr5', columnName='attr5', type=class java.lang.String, isID=false}"
          */
         for (SourceColumn field : metricsStmt.getFieldsFromSource()) {
             try {
@@ -227,10 +245,20 @@ public class OALClassGenerator {
 
         /**
          * Generate methods
+         *      "id",
+         *      "hashCode",
+         *      "remoteHashCode",
+         *      "equals",
+         *      "serialize",
+         *      "deserialize",
+         *      "getMeta",
+         *      "toHour",
+         *      "toDay"
          */
         for (String method : METRICS_CLASS_METHODS) {
             StringWriter methodEntity = new StringWriter();
             try {
+                // skywalking/oap-server/oal-rt/src/main/resources/code-templates/metrics 生成需要写入到 Metrics 类中的方法
                 configuration.getTemplate("metrics/" + method + ".ftl").process(metricsStmt, methodEntity);
                 metricsClass.addMethod(CtNewMethod.make(methodEntity.toString(), metricsClass));
             } catch (Exception e) {
@@ -269,7 +297,7 @@ public class OALClassGenerator {
             throw new OALCompileException(e.getMessage(), e);
         }
 
-        log.debug("Generate metrics class, " + metricsClass.getName());
+        log.debug("Generate metrics class, " + metricsClass.getName()); // org.apache.skywalking.oap.server.core.source.oal.rt.metrics.ServiceRespTimeMetrics
         writeGeneratedFile(metricsClass, "metrics");
 
         return targetClass;
@@ -279,7 +307,7 @@ public class OALClassGenerator {
      * Generate metrics class builder and inject it to classloader
      */
     private void generateMetricsBuilderClass(AnalysisResult metricsStmt) throws OALCompileException {
-        String className = metricsBuilderClassName(metricsStmt, false);
+        String className = metricsBuilderClassName(metricsStmt, false); // eg. ServiceRespTimeMetricsBuilder
         CtClass metricsBuilderClass = classPool.makeClass(metricsBuilderClassName(metricsStmt, true));
         try {
             metricsBuilderClass.addInterface(classPool.get(storageBuilderFactory.builderTemplate().getSuperClass()));
@@ -336,7 +364,7 @@ public class OALClassGenerator {
     private Class generateDispatcherClass(String scopeName,
                                           DispatcherContext dispatcherContext) throws OALCompileException {
 
-        String className = dispatcherClassName(scopeName, false);
+        String className = dispatcherClassName(scopeName, false); // eg. MQEndpointAccessDispatcher
         CtClass dispatcherClass = classPool.makeClass(dispatcherClassName(scopeName, true));
         try {
             CtClass dispatcherInterface = classPool.get(DISPATCHER_INTERFACE);
@@ -426,25 +454,28 @@ public class OALClassGenerator {
     }
 
     private void buildDispatcherContext(AnalysisResult metricsStmt) {
-        String sourceName = metricsStmt.getFrom().getSourceName();
+        String sourceName = metricsStmt.getFrom().getSourceName(); // eg. Service
 
+        // 每一个.oal文件都会创建一个OALClassGenerator,都会有一个新的AllDispatcherContext
         DispatcherContext context = allDispatcherContext.getAllContext().computeIfAbsent(sourceName, name -> {
             DispatcherContext absent = new DispatcherContext();
-            absent.setSourcePackage(oalDefine.getSourcePackage());
-            absent.setSource(name);
-            absent.setPackageName(name.toLowerCase());
-            absent.setSourceDecorator(metricsStmt.getSourceDecorator());
+            /** eg. {@link CoreOALDefine#CoreOALDefine()} 这里的 sourcePackage */
+            absent.setSourcePackage(oalDefine.getSourcePackage()); // org.apache.skywalking.oap.server.core.source.
+            absent.setSource(name); // Service
+            absent.setPackageName(name.toLowerCase()); // service
+            absent.setSourceDecorator(metricsStmt.getSourceDecorator()); // ServiceDecorator
             return absent;
         });
-        metricsStmt.setMetricsClassPackage(oalDefine.getDynamicMetricsClassPackage());
-        metricsStmt.setSourcePackage(oalDefine.getSourcePackage());
-        context.getMetrics().add(metricsStmt);
+        metricsStmt.setMetricsClassPackage(oalDefine.getDynamicMetricsClassPackage()); // org.apache.skywalking.oap.server.core.source.oal.rt.metrics.
+        metricsStmt.setSourcePackage(oalDefine.getSourcePackage()); // org.apache.skywalking.oap.server.core.source.
+        context.getMetrics().add(metricsStmt); // eg. service_resp_time
     }
 
     public void prepareRTTempFolder() {
         if (openEngineDebug) {
-            File workPath = WorkPath.getPath();
-            File folder = new File(workPath.getParentFile(), "oal-rt/");
+            File workPath = WorkPath.getPath(); // /Users/zhouzixin/sw-framework/skywalking/oap-server/server-core/target/classes
+            File folder = new File(workPath.getParentFile(), "oal-rt/"); // /Users/zhouzixin/sw-framework/skywalking/oap-server/server-core/target/oal-rt
+            System.out.println("my|OALClassGenerator folder = " + folder);
             if (folder.exists()) {
                 try {
                     FileUtils.deleteDirectory(folder);

@@ -48,7 +48,9 @@ public class StreamAnnotationListener implements AnnotationListener {
     @SuppressWarnings("unchecked")
     @Override
     public void notify(Class aClass) throws StorageException {
-        if (aClass.isAnnotationPresent(Stream.class)) {
+        // aClass eg. org.apache.skywalking.oap.server.core.source.oal.rt.metrics.ServiceRespTimeMetrics
+        // eg. processor = MetricsStreamProcessor.class
+        if (aClass.isAnnotationPresent(Stream.class)) { // Stream 是必须的
             Stream stream = (Stream) aClass.getAnnotation(Stream.class);
 
             if (DisableRegister.INSTANCE.include(stream.name())) {

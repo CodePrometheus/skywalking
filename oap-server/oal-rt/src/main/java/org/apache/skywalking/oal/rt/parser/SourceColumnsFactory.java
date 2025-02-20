@@ -27,6 +27,11 @@ public class SourceColumnsFactory {
     public static List<SourceColumn> getColumns(String source) {
         List<SourceColumn> sourceColumns = new ArrayList<>();
 
+        /**
+         * e.g.
+         * source: Service
+         * columns: entityId attr0 attr1 attr2 attr3 attr4 attr5
+         */
         List<ScopeDefaultColumn> columns = DefaultScopeDefine.getDefaultColumns(source);
         for (ScopeDefaultColumn defaultColumn : columns) {
             sourceColumns.add(

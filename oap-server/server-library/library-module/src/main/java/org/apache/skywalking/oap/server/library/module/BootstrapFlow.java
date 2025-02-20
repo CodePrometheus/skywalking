@@ -32,7 +32,7 @@ class BootstrapFlow {
     BootstrapFlow(Map<String, ModuleDefine> loadedModules) throws CycleDependencyException, ModuleNotFoundException {
         this.loadedModules = loadedModules;
         startupSequence = new ArrayList<>();
-
+        // 遍历loadedModules中所有的ModuleDefine对应的ModuleProvider，然后根据每个ModuleProvider依赖的ModuleDefine进行排序
         makeSequence();
     }
 
