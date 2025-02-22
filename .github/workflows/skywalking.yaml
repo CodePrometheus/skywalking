@@ -162,7 +162,7 @@ jobs:
       ( always() && ! cancelled() ) &&
       ((github.event_name == 'schedule' && github.repository == 'apache/skywalking') || needs.changes.outputs.oap == 'true')
     name: Build dist tar
-    needs: [sanity-check, changes]
+    needs: [changes]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -193,7 +193,7 @@ jobs:
       ( always() && ! cancelled() ) &&
       ((github.event_name == 'schedule' && github.repository == 'apache/skywalking') || needs.changes.outputs.oap == 'true')
     name: Docker images
-    needs: [dist-tar, changes]
+    needs: [sanity-check, dist-tar, changes]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -403,6 +403,13 @@ jobs:
             config: test/e2e-v2/cases/alarm/postgres/e2e.yaml
           - name: Alarm BanyanDB
             config: test/e2e-v2/cases/alarm/banyandb/e2e.yaml
+
+          - name: Baseline-driven Alarm ES
+            config: test/e2e-v2/cases/baseline/es/e2e.yaml
+          - name: Baseline-driven Alarm ES Sharding
+            config: test/e2e-v2/cases/baseline/es/es-sharding/e2e.yaml
+          - name: Baseline-driven Alarm BanyanDB
+            config: test/e2e-v2/cases/baseline/banyandb/e2e.yaml
 
           - name: TTL ES 7.16.3
             config: test/e2e-v2/cases/ttl/es/e2e.yaml
