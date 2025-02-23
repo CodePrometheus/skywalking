@@ -21,8 +21,10 @@ package org.apache.skywalking.oap.server.analyzer.provider.trace.parser;
 import java.util.LinkedList;
 import java.util.List;
 
+import lombok.ToString;
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.AnalysisListenerFactory;
 
+@ToString
 public class SegmentParserListenerManager implements ISegmentParserListenerManager {
 
     private final List<AnalysisListenerFactory> spanListenerFactories;

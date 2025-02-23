@@ -46,6 +46,7 @@ public class TraceSegmentReportServiceHandler extends TraceSegmentReportServiceG
         this.segmentParserService = moduleManager.find(AnalyzerModule.NAME)
                                                  .provider()
                                                  .getService(ISegmentParserService.class);
+        System.out.println("my|TraceSegmentReportServiceHandler this.segmentParserService = " + this.segmentParserService);
 
         MetricsCreator metricsCreator = moduleManager.find(TelemetryModule.NAME)
                                                      .provider()

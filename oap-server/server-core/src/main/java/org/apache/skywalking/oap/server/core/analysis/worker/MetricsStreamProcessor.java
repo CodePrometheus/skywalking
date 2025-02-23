@@ -167,15 +167,19 @@ public class MetricsStreamProcessor implements StreamProcessor<Metrics> {
         }
         if (supportDownSampling) {
             if (configService.shouldToHour()) {
+                // L2 hour
                 Model model = modelSetter.add(
                     metricsClass, stream.getScopeId(), new Storage(stream.getName(), timeRelativeID, DownSampling.Hour)
                 );
+                // new MetricsPersistentWorker
                 hourPersistentWorker = downSamplingWorker(moduleDefineHolder, metricsDAO, model, supportUpdate, kind);
             }
             if (configService.shouldToDay()) {
+                // L2 day
                 Model model = modelSetter.add(
                     metricsClass, stream.getScopeId(), new Storage(stream.getName(), timeRelativeID, DownSampling.Day)
                 );
+                // new MetricsPersistentWorker
                 dayPersistentWorker = downSamplingWorker(moduleDefineHolder, metricsDAO, model, supportUpdate, kind);
             }
 
@@ -186,6 +190,8 @@ public class MetricsStreamProcessor implements StreamProcessor<Metrics> {
         Model model = modelSetter.add(
             metricsClass, stream.getScopeId(), new Storage(stream.getName(), timeRelativeID, DownSampling.Minute)
         );
+        // L2 min
+        // new MetricsPersistentWorker
         MetricsPersistentWorker minutePersistentWorker = minutePersistentWorker(
             moduleDefineHolder, metricsDAO, model, transWorker, supportUpdate, kind);
 
@@ -196,6 +202,7 @@ public class MetricsStreamProcessor implements StreamProcessor<Metrics> {
         workerInstanceSetter.put(remoteReceiverWorkerName, minutePersistentWorker, metricsClass);
 
         MetricsRemoteWorker remoteWorker = new MetricsRemoteWorker(moduleDefineHolder, remoteReceiverWorkerName);
+        // L1
         MetricsAggregateWorker aggregateWorker = new MetricsAggregateWorker(
             moduleDefineHolder, remoteWorker, stream.getName(), l1FlushPeriod, kind);
 

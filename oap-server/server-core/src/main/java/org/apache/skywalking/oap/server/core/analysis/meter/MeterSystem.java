@@ -53,6 +53,7 @@ import org.apache.skywalking.oap.server.library.module.Service;
 /**
  * MeterSystem provides the API way to create {@link MetricsStreamProcessor} rather than manual analysis metrics or OAL
  * script.
+ * MeterSystem 提供了创建 MetricsStreamProcessor 的 API 方式，而不是手动分析指标或 OAL 脚本。
  *
  * @since 8.0.0
  */

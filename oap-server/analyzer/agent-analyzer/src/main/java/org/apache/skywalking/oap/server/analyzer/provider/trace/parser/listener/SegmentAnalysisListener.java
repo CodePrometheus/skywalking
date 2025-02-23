@@ -19,10 +19,13 @@
 package org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener;
 
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
+import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleProvider;
 import org.apache.skywalking.oap.server.core.analysis.manual.searchtag.TagType;
+import org.apache.skywalking.oap.server.core.analysis.manual.segment.SegmentRecord;
 import org.apache.skywalking.oap.server.core.config.SearchableTracesTagsWatcher;
 import org.apache.skywalking.oap.server.core.source.TagAutocomplete;
 import org.apache.skywalking.oap.server.library.util.StringUtil;
@@ -45,6 +48,7 @@ import org.apache.skywalking.oap.server.library.util.BooleanUtils;
  * SegmentSpanListener forwards the segment raw data to the persistence layer with the query required conditions.
  */
 @Slf4j
+@ToString
 @RequiredArgsConstructor
 public class SegmentAnalysisListener implements FirstAnalysisListener, EntryAnalysisListener, SegmentListener {
     private final SourceReceiver sourceReceiver;
@@ -84,7 +88,7 @@ public class SegmentAnalysisListener implements FirstAnalysisListener, EntryAnal
             );
         }
 
-        long timeBucket = TimeBucket.getRecordTimeBucket(startTimestamp);
+        long timeBucket = TimeBucket.getRecordTimeBucket(startTimestamp); // eg. 20250223200802
 
         segment.setSegmentId(segmentObject.getTraceSegmentId());
         segment.setServiceId(serviceId);
@@ -125,13 +129,13 @@ public class SegmentAnalysisListener implements FirstAnalysisListener, EntryAnal
         segment.setTraceId(segmentObject.getTraceId());
         segmentObject.getSpansList().forEach(span -> {
             if (startTimestamp == 0 || startTimestamp > span.getStartTime()) {
-                startTimestamp = span.getStartTime();
+                startTimestamp = span.getStartTime(); // 所有 span 中的最小 startTimestamp
             }
             if (span.getEndTime() > endTimestamp) {
-                endTimestamp = span.getEndTime();
+                endTimestamp = span.getEndTime(); // 所有 span 中的最大 endTimestamp
             }
             isError = isError || segmentStatusAnalyzer.isError(span);
-            appendSearchableTags(span);
+            appendSearchableTags(span); // 将 span 中的 tags 添加到 segment 中
         });
         final long accurateDuration = endTimestamp - startTimestamp;
         duration = accurateDuration > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) accurateDuration;
@@ -179,7 +183,7 @@ public class SegmentAnalysisListener implements FirstAnalysisListener, EntryAnal
 
         segment.setEndpointId(endpointId);
 
-        sourceReceiver.receive(segment);
+        sourceReceiver.receive(segment); /**{@link SegmentRecord} 入库*/
         addAutocompleteTags();
     }
 
@@ -212,11 +216,13 @@ public class SegmentAnalysisListener implements FirstAnalysisListener, EntryAnal
                                                              .provider()
                                                              .getService(ConfigService.class);
             this.searchTagKeys = configService.getSearchableTracesTags();
+            /**{@link AnalyzerModuleProvider#prepare()} 初始化*/
             this.sampler = new TraceSegmentSampler(config.getTraceSamplingPolicyWatcher());
             this.forceSampleErrorSegment = config.isForceSampleErrorSegment();
             this.namingControl = moduleManager.find(CoreModule.NAME)
                                               .provider()
                                               .getService(NamingControl.class);
+            // 默认是 FROM_SPAN_STATUS
             this.segmentStatusAnalyzer = SegmentStatusStrategy.findByName(config.getSegmentStatusAnalysisStrategy())
                                                               .getExceptionAnalyzer();
         }

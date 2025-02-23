@@ -40,7 +40,7 @@ import org.apache.skywalking.oap.server.core.storage.type.StorageBuilder;
 // timeRelativeID=false at here doesn't mean the ID is completely irrelevant with time bucket.
 // TagAutocompleteData still uses the day(toTimeBucketInDay()) as ID prefix,
 // to make this tag tip feature doesn't host too large scale data.
-@MetricsExtension(supportDownSampling = false, supportUpdate = false, timeRelativeID = false)
+@MetricsExtension(supportDownSampling = false, supportUpdate = false, timeRelativeID = false) // supportDownSampling = false 所以只有min级别聚合
 @EqualsAndHashCode(of = {
     "tagKey",
     "tagValue",

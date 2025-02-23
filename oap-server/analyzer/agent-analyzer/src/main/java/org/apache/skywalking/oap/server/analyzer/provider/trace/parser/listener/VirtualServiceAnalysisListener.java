@@ -21,6 +21,7 @@ package org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.apache.skywalking.apm.network.language.agent.v3.SpanObject;
 import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleConfig;
@@ -35,8 +36,9 @@ import org.apache.skywalking.oap.server.library.module.ModuleManager;
 
 /**
  * Virtual Service represent remote service
+ * VirtualServiceAnalysisListener 收集 segment 中每个 span 中的 mq database cache 中的数据并存储
  */
-
+@ToString
 @RequiredArgsConstructor
 public class VirtualServiceAnalysisListener implements ExitAnalysisListener, LocalAnalysisListener, EntryAnalysisListener {
 

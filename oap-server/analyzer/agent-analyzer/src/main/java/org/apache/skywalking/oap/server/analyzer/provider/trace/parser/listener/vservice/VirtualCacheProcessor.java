@@ -76,6 +76,7 @@ public class VirtualCacheProcessor implements VirtualServiceProcessor {
         int latency = (int) (span.getEndTime() - span.getStartTime());
         sourceList.add(parseServiceMeta(serviceName, timeBucket));
         VirtualCacheOperation op = parseOperation(tags.get(SpanTags.CACHE_OP));
+        // span 的时间超过了配置文件中设定的阈值，记录一个 CacheSlowAccess
         if ((op == VirtualCacheOperation.Write && latency > config.getCacheWriteLatencyThresholdsAndWatcher()
                                                                   .getThreshold(cacheType))
             || (op == VirtualCacheOperation.Read && latency > config.getCacheReadLatencyThresholdsAndWatcher()

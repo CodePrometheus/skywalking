@@ -19,6 +19,7 @@
 package org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener;
 
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.skywalking.apm.network.language.agent.v3.RefType;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
@@ -37,10 +38,19 @@ import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleConfig;
  * between network address and current service and instance. The alias relationship will be used in the {@link
  * RPCAnalysisListener#parseExit(SpanObject, SegmentObject)} to setup the accurate target destination service
  * and instance.
+ * NetworkAddressAliasMappingListener 使用segment引用中传播的数据，在网络地址和当前服务和实例之间建立别名关系。别名关系将在
+ * RPCAnalysisListener#parseExit(SpanObject, SegmentObject) 中使用，以设置准确的目标目标服务和实例。
  *
  * This is a key point of SkyWalking header propagation protocol.
+ * 这是SkyWalking头部传播协议的关键点。
+ * <p/>
+ * 在一个分布式相同中，A 通过某 IP 调用 B，然后这个 IP 并不直接对应 B 的逻辑名称
+ * NetworkAddressAliasMappingListener 的作用就是识别并记录这种地址与服务之间的关系
+ * eg. A 调用 1.1.1.1:8080 这个地址，sw 会通过 NetworkAddressAliasMappingListener 知道这个地址对应 B
+ * 从而将链路展示 A 调用 B，而不是 A 调用 1.1.1.1:8080
  */
 @Slf4j
+@ToString
 @RequiredArgsConstructor
 public class NetworkAddressAliasMappingListener implements EntryAnalysisListener {
     private final SourceReceiver sourceReceiver;
@@ -57,7 +67,7 @@ public class NetworkAddressAliasMappingListener implements EntryAnalysisListener
         }
         if (!span.getSpanLayer().equals(SpanLayer.MQ)) {
             span.getRefsList().forEach(segmentReference -> {
-                if (RefType.CrossProcess.equals(segmentReference.getRefType())) {
+                if (RefType.CrossProcess.equals(segmentReference.getRefType())) { // 跨进程
                     final String networkAddressUsedAtPeer = namingControl.formatServiceName(
                         segmentReference.getNetworkAddressUsedAtPeer());
                     if (config.getUninstrumentedGatewaysConfig().isAddressConfiguredAsGateway(

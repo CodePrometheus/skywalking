@@ -90,6 +90,7 @@ public enum PersistenceTimer {
         );
 
         prepareExecutorService = Executors.newFixedThreadPool(moduleConfig.getPrepareThreads());
+        // 每隔25s定式任务
         if (!isStarted) {
             Executors.newSingleThreadScheduledExecutor()
                      .scheduleWithFixedDelay(
@@ -113,6 +114,7 @@ public enum PersistenceTimer {
         HistogramMetrics.Timer allTimer = allLatency.createTimer();
         List<PersistenceWorker<? extends StorageData>> workers = new ArrayList<>();
         workers.addAll(TopNStreamProcessor.getInstance().getPersistentWorkers());
+        // L2 级聚合的 worker => minutePersistentWorker hourPersistentWorker dayPersistentWorker
         workers.addAll(MetricsStreamProcessor.getInstance().getPersistentWorkers());
 
         final CompletableFuture<Void> future =

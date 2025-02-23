@@ -21,6 +21,7 @@ package org.apache.skywalking.oap.server.analyzer.provider.trace.parser;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
+import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleProvider;
 import org.apache.skywalking.oap.server.library.module.ModuleManager;
 import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleConfig;
 
@@ -31,6 +32,9 @@ import org.apache.skywalking.oap.server.analyzer.provider.AnalyzerModuleConfig;
 public class SegmentParserServiceImpl implements ISegmentParserService {
     private final ModuleManager moduleManager;
     private final AnalyzerModuleConfig config;
+    /**
+     * 在{@link AnalyzerModuleProvider#listenerManager()} 进行赋值
+     */
     @Setter
     private SegmentParserListenerManager listenerManager;
 

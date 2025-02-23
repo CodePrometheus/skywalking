@@ -21,6 +21,7 @@ package org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentReference;
@@ -55,6 +56,7 @@ import static org.apache.skywalking.oap.server.analyzer.provider.trace.parser.Sp
  * RPCAnalysisListener detects all RPC relative statistics.
  */
 @Slf4j
+@ToString
 @RequiredArgsConstructor
 public class RPCAnalysisListener extends CommonAnalysisListener implements EntryAnalysisListener, ExitAnalysisListener, LocalAnalysisListener {
     private final List<RPCTrafficSourceBuilder> callingInTraffic = new ArrayList<>(10);
@@ -74,12 +76,15 @@ public class RPCAnalysisListener extends CommonAnalysisListener implements Entry
     /**
      * All entry spans are transferred as the Service, Instance and Endpoint related sources. Entry spans are treated on
      * the behalf of the observability status of the service reported these spans.
+     * 所有的 entry span 都会被转换为与服务、实例和端点相关的源。Entry span 代表了报告这些 span 的服务的可观察状态。
      *
      * Also, when face the MQ and uninstrumented Gateways, there is different logic to generate the relationship between
      * services/instances rather than the normal RPC direct call. The reason is the same, we aren't expecting the agent
      * installed in the MQ server, and Gateway may not have suitable agent. Any uninstrumented service if they have the
      * capability to forward SkyWalking header through themselves, you could consider the uninstrumented configurations
      * to make the topology works to be a whole.
+     * 此外，当面对 MQ 和未被检测的网关时，生成服务/实例之间的关系的逻辑与正常的 RPC 直接调用不同。原因是一样的，我们不希望在 MQ 服务器上安装代理，网关可能没有合适的代理。
+     * 任何未被检测的服务，如果它们有能力通过自身转发 SkyWalking 头，您可以考虑未被检测的配置，使拓扑工作为整体。
      */
     @Override
     public void parseEntry(SpanObject span, SegmentObject segmentObject) {
@@ -88,7 +93,7 @@ public class RPCAnalysisListener extends CommonAnalysisListener implements Entry
         }
 
         if (span.getRefsCount() > 0) {
-            for (int i = 0; i < span.getRefsCount(); i++) {
+            for (int i = 0; i < span.getRefsCount(); i++) { // 上游调用的信息
                 SegmentReference reference = span.getRefs(i);
                 RPCTrafficSourceBuilder sourceBuilder = new RPCTrafficSourceBuilder(namingControl);
 

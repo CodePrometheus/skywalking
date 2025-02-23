@@ -31,7 +31,7 @@ public class TraceSegmentSampler {
     private final TraceSamplingPolicyWatcher traceSamplingPolicyWatcher;
 
     public boolean shouldSample(SegmentObject segmentObject, int duration) {
-        int sample = Math.abs(segmentObject.getTraceId().hashCode()) % 10000;
+        int sample = Math.abs(segmentObject.getTraceId().hashCode()) % 10000; // [0, 9999]
         String serviceName = segmentObject.getService();
         return traceSamplingPolicyWatcher.shouldSample(serviceName, sample, duration);
     }

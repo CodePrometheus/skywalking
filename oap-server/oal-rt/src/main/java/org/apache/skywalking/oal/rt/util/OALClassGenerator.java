@@ -60,7 +60,6 @@ import org.apache.skywalking.oap.server.core.storage.StorageBuilderFactory;
 import org.apache.skywalking.oap.server.core.storage.annotation.BanyanDB;
 import org.apache.skywalking.oap.server.core.storage.annotation.Column;
 import org.apache.skywalking.oap.server.core.storage.annotation.ElasticSearch;
-import org.apache.skywalking.oap.server.library.util.StringUtil;
 
 import java.io.DataOutputStream;
 import java.io.File;

@@ -42,6 +42,7 @@ public class TraceSamplingPolicyWatcher extends ConfigChangeWatcher {
 
     public TraceSamplingPolicyWatcher(AnalyzerModuleConfig moduleConfig, ModuleProvider provider) {
         super(AnalyzerModule.NAME, provider, "traceSamplingPolicy");
+        // 读取文件 trace-sampling-policy-settings.yml
         this.defaultSamplingPolicySettings = parseFromFile(moduleConfig.getTraceSamplingPolicySettingsFile());
         loadDefaultPolicySettings();
     }
@@ -72,6 +73,7 @@ public class TraceSamplingPolicyWatcher extends ConfigChangeWatcher {
      */
     public boolean shouldSample(String service, int sample, int duration) {
         SamplingPolicy samplingPolicy = this.samplingPolicySettings.get().get(service);
+        System.out.println("my|TraceSamplingPolicyWatcher|shouldSample|samplingPolicy = " + samplingPolicy);
         if (samplingPolicy == null) {
             return shouldSampleByDefault(sample, duration);
         }
@@ -87,6 +89,8 @@ public class TraceSamplingPolicyWatcher extends ConfigChangeWatcher {
      * @return
      */
     private boolean shouldSampleByDefault(int sample, int duration) {
+        // 前面计算的 duration 是否比文件中配置的 duration 大，若是则返回 true 需要采样
+        // 前面计算的 % 10000 的结果是否比文件中配置的 rate 小，若是则返回 true 需要采样
         return isOverDefaultSlowThreshold(duration) || withinDefaultRateRange(sample);
     }
 

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.skywalking.oap.server.core.analysis.metrics.CountMetrics;
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics;
 import org.apache.skywalking.oap.server.core.storage.StorageID;
 
@@ -52,7 +53,7 @@ public class MergableBufferedData<METRICS extends Metrics> implements BufferedDa
         if (existed == null) {
             buffer.put(id, data);
         } else {
-            existed.combine(data);
+            existed.combine(data); /** L1聚合主要做的事情，比如{@link CountMetrics#combine(Metrics)} */
         }
     }
 

@@ -34,6 +34,9 @@ import org.apache.skywalking.oap.server.telemetry.api.MetricsTag;
  * The server status service provides the indicators for the current server status.
  * Notice, this should not be treated as a kind of health checker or self telemetry.
  * For more, this helps modules to be aware of current OAP server status.
+ * 服务状态服务提供当前服务器状态的指标。
+ * 注意，这不应被视为一种健康检查器或自我遥测。
+ * 这个帮助模块了解当前的OAP服务器状态。
  *
  * @since 9.4.0
  */

@@ -125,7 +125,7 @@ public class StorageModels implements IModelManager, ModelCreator, ModelManipula
 
         this.followColumnNameRules(model);
         models.add(model);
-        System.out.println("my|StorageModels|models = " + models);
+        // System.out.println("my|StorageModels|models = " + models);
 
         for (final CreatingListener listener : listeners) {
             listener.whenCreating(model);

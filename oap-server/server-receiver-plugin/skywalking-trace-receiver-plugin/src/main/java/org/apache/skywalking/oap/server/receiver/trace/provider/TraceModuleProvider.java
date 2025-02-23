@@ -67,6 +67,7 @@ public class TraceModuleProvider extends ModuleProvider {
                                                               .provider()
                                                               .getService(HTTPHandlerRegister.class);
 
+        // 把接受 agent 侧发送链路追踪数据的操作句柄注册到 grpcServer 中，后续就可以使用 grpc 服务去接收链路追踪的数据
         TraceSegmentReportServiceHandler traceSegmentReportServiceHandler = new TraceSegmentReportServiceHandler(getManager());
         grpcHandlerRegister.addHandler(traceSegmentReportServiceHandler);
         grpcHandlerRegister.addHandler(new TraceSegmentReportServiceHandlerCompat(traceSegmentReportServiceHandler));

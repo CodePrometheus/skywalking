@@ -64,7 +64,8 @@ public class RemoteSenderService implements Service {
                                                          .getService(RemoteClientManager.class);
         RemoteClient remoteClient = null;
 
-        List<RemoteClient> clientList = clientManager.getRemoteClient();
+        List<RemoteClient> clientList = clientManager.getRemoteClient(); // mixed获取到的就是SelfRemoteClient,否则就是GRPCRemoteClient
+        System.out.println("my|RemoteSenderService clientList = " + clientList);
         if (clientList.size() == 0) {
             LOGGER.warn(
                 "There is no available remote server for now, ignore the streaming data until the cluster metadata initialized.");
@@ -77,7 +78,7 @@ public class RemoteSenderService implements Service {
             case Rolling:
                 remoteClient = rollingSelector.select(clientList, streamData);
                 break;
-            case ForeverFirst:
+            case ForeverFirst: // 永远拿第一个
                 remoteClient = foreverFirstSelector.select(clientList, streamData);
                 break;
         }

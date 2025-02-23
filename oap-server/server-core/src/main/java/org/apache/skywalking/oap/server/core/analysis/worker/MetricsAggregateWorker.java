@@ -52,7 +52,7 @@ public class MetricsAggregateWorker extends AbstractWorker<Metrics> {
     private long lastSendTime = 0;
 
     MetricsAggregateWorker(ModuleDefineHolder moduleDefineHolder,
-                           AbstractWorker<Metrics> nextWorker,
+                           AbstractWorker<Metrics> nextWorker, // remoteWorker用于将L1级聚合好的数据发送到L2
                            String modelName,
                            long l1FlushPeriod,
                            MetricStreamKind kind) {
@@ -79,6 +79,7 @@ public class MetricsAggregateWorker extends AbstractWorker<Metrics> {
         } catch (Exception e) {
             throw new UnexpectedException(e.getMessage(), e);
         }
+        // 指定当前dataCarrier消费者模型是 AggregatorConsumer 对象
         this.dataCarrier.consume(ConsumerPoolFactory.INSTANCE.get(name), new AggregatorConsumer());
 
         MetricsCreator metricsCreator = moduleDefineHolder.find(TelemetryModule.NAME)
@@ -102,6 +103,7 @@ public class MetricsAggregateWorker extends AbstractWorker<Metrics> {
      */
     @Override
     public final void in(Metrics metrics) {
+        /** consumer: {@link AggregatorConsumer#consume(List)} */
         if (!dataCarrier.produce(metrics)) {
             abandonCounter.inc();
         }
@@ -116,6 +118,7 @@ public class MetricsAggregateWorker extends AbstractWorker<Metrics> {
     private void onWork(List<Metrics> metricsList) {
         metricsList.forEach(metrics -> {
             aggregationCounter.inc();
+            // mergeDataCache 存储当前 L1 聚合已经处理过的 Metrics 数据
             mergeDataCache.accept(metrics);
         });
 
@@ -124,10 +127,10 @@ public class MetricsAggregateWorker extends AbstractWorker<Metrics> {
 
     private void flush() {
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastSendTime > l1FlushPeriod) {
+        if (currentTime - lastSendTime > l1FlushPeriod) { // l1FlushPeriod = 500
             mergeDataCache.read().forEach(
                 data -> {
-                    nextWorker.in(data);
+                    nextWorker.in(data); /**{@link MetricsRemoteWorker#in(Metrics)}*/
                 }
             );
             lastSendTime = currentTime;

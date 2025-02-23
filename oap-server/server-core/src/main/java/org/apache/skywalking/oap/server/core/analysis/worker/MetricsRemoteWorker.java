@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.skywalking.oap.server.core.CoreModule;
 import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics;
 import org.apache.skywalking.oap.server.core.remote.RemoteSenderService;
+import org.apache.skywalking.oap.server.core.remote.data.StreamData;
 import org.apache.skywalking.oap.server.core.remote.selector.Selector;
 import org.apache.skywalking.oap.server.core.worker.AbstractWorker;
 import org.apache.skywalking.oap.server.library.module.ModuleDefineHolder;
@@ -43,6 +44,7 @@ public class MetricsRemoteWorker extends AbstractWorker<Metrics> {
     @Override
     public final void in(Metrics metrics) {
         try {
+            /**{@link RemoteSenderService#send(String, StreamData, Selector)}*/
             remoteSender.send(remoteReceiverWorkerName, metrics, Selector.HashCode);
         } catch (Throwable e) {
             log.error(e.getMessage(), e);

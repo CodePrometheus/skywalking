@@ -31,6 +31,7 @@ import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.ExitAnalysisListener;
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.FirstAnalysisListener;
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.LocalAnalysisListener;
+import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.SegmentAnalysisListener;
 import org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener.SegmentListener;
 import org.apache.skywalking.oap.server.library.module.ModuleManager;
 
@@ -52,7 +53,7 @@ public class TraceAnalyzer {
         notifySegmentListener(segmentObject);
 
         segmentObject.getSpansList().forEach(spanObject -> {
-            if (spanObject.getSpanId() == 0) {
+            if (spanObject.getSpanId() == 0) { // 可能是 entry 或 local span
                 notifyFirstListener(spanObject, segmentObject);
             }
 
@@ -102,11 +103,12 @@ public class TraceAnalyzer {
     private void notifyFirstListener(SpanObject span, SegmentObject segmentObject) {
         analysisListeners.forEach(listener -> {
             if (listener.containsPoint(AnalysisListener.Point.First)) {
-                ((FirstAnalysisListener) listener).parseFirst(span, segmentObject);
+                ((FirstAnalysisListener) listener).parseFirst(span, segmentObject); /**目前只有{@link SegmentAnalysisListener#parseFirst(SpanObject, SegmentObject)}*/
             }
         });
     }
 
+    /** 找到能处理 Segment 类型的 Listener 目前只有{@link SegmentAnalysisListener} */
     private void notifySegmentListener(SegmentObject segmentObject) {
         analysisListeners.forEach(listener -> {
             if (listener.containsPoint(AnalysisListener.Point.Segment)) {

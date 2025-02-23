@@ -39,6 +39,7 @@ public class WorkerInstancesService implements IWorkerInstanceSetter, IWorkerIns
 
     @Override
     public RemoteHandleWorker get(String nextWorkerName) {
+        System.out.println("my|WorkerInstancesService|get instances = " + instances);
         return instances.get(nextWorkerName);
     }
 

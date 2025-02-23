@@ -28,16 +28,19 @@ import lombok.Getter;
 public enum SegmentStatusStrategy {
     /**
      * `FROM_SPAN_STATUS` represents the segment status would be error if any span is in error status.
+     * 表示如果任何一个 span 是错误状态，那么segment状态将是错误的。
      */
     FROM_SPAN_STATUS(new FromSpanStatus()),
     /**
      * `FROM_ENTRY_SPAN` means the segment status would be determined by the status of entry spans only.
+     * 表示segment状态仅由入口span的状态决定。
      *
      * @see FromEntrySpan
      */
     FROM_ENTRY_SPAN(new FromEntrySpan()),
     /**
      * `FROM_FIRST_SPAN` means the segment status would be determined by the status of the first span only.
+     * 表示segment状态仅由第一个span的状态决定。
      */
     FROM_FIRST_SPAN(new FromFirstSpan());
 

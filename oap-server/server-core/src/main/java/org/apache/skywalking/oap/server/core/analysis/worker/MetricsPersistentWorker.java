@@ -131,9 +131,9 @@ public class MetricsPersistentWorker extends PersistenceWorker<Metrics> implemen
 
         int bufferSize = 2000;
         if (MetricStreamKind.MAL == kind) {
-            // In MAL meter streaming, the load of data flow is much less as they are statistics already,
-            // but in OAL sources, they are raw data.
-            // Set the buffer(size of queue) as 1/2 to reduce unnecessary resource costs.
+            // In MAL meter streaming, the load of data flow is much less as they are statistics already, 在 MAL 计量流中，数据流的负载要少得多，因为它们已经是统计数据了
+            // but in OAL sources, they are raw data. 但在 OAL 源中，它们是原始数据
+            // Set the buffer(size of queue) as 1/2 to reduce unnecessary resource costs. 将缓冲区（队列大小）设置为 1/2，以减少不必要的资源成本
             bufferSize = 1000;
         }
         this.dataCarrier = new DataCarrier<>("MetricsPersistentWorker." + model.getName(), name, 1, bufferSize);
@@ -164,8 +164,8 @@ public class MetricsPersistentWorker extends PersistenceWorker<Metrics> implemen
     /**
      * Create the leaf and down-sampling MetricsPersistentWorker, no next step.
      */
-    MetricsPersistentWorker(ModuleDefineHolder moduleDefineHolder,
-                            Model model,
+    MetricsPersistentWorker(ModuleDefineHolder moduleDefineHolder, // moduleManager
+                            Model model, // 数据表对象
                             IMetricsDAO metricsDAO,
                             boolean supportUpdate,
                             long storageSessionTimeout,
@@ -187,6 +187,7 @@ public class MetricsPersistentWorker extends PersistenceWorker<Metrics> implemen
     @Override
     public void in(Metrics metrics) {
         aggregationCounter.inc();
+        /** consumer: {@link PersistentConsumer#consume(List)} 执行{@link MetricsPersistentWorker#buildBatchRequests()} */
         dataCarrier.produce(metrics);
     }
 
@@ -211,6 +212,7 @@ public class MetricsPersistentWorker extends PersistenceWorker<Metrics> implemen
         List<Metrics> metricsList = new ArrayList<>();
         List<PrepareRequest> prepareRequests = new ArrayList<>(lastCollection.size());
         for (Metrics data : lastCollection) {
+            // 只有min级别会将min的数据转换成 hour 或 day 级别的数据
             transWorker.ifPresent(metricsTransWorker -> metricsTransWorker.in(data));
 
             metricsList.add(data);

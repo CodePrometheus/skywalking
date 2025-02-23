@@ -21,6 +21,7 @@ package org.apache.skywalking.oap.server.analyzer.provider.trace.parser.listener
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentObject;
 import org.apache.skywalking.apm.network.language.agent.v3.SegmentReference;
 import org.apache.skywalking.apm.network.language.agent.v3.SpanLayer;
@@ -39,9 +40,12 @@ import org.apache.skywalking.oap.server.library.util.StringUtil;
 /**
  * Endpoint dependency could be detected by local and exit span in cross threads cases.
  * This is an add-on to {@link RPCAnalysisListener}, which is detecting all RPC relative statistics.
+ * Endpoint 依赖可以通过跨线程情况下的本地和退出 span 来检测。
+ * 这是对 {@link RPCAnalysisListener} 的补充，它检测所有 RPC 相关的统计信息。
  *
  * @since 9.0.0
  */
+@ToString
 @RequiredArgsConstructor
 public class EndpointDepFromCrossThreadAnalysisListener extends CommonAnalysisListener implements ExitAnalysisListener, LocalAnalysisListener {
     private final SourceReceiver sourceReceiver;
